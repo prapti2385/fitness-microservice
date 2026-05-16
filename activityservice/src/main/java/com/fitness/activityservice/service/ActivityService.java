@@ -4,7 +4,6 @@ import com.fitness.activityservice.dto.ActivityRequest;
 import com.fitness.activityservice.dto.ActivityResponse;
 import com.fitness.activityservice.model.Activity;
 import com.fitness.activityservice.repository.ActivityRepository;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,8 +12,10 @@ import java.util.stream.Collectors;
 @Service
 public class ActivityService {
     private final ActivityRepository activityRepository;
-    public ActivityService(ActivityRepository activityRepository) {
+    private final UserValidationService userValidationService;
+    public ActivityService(ActivityRepository activityRepository, UserValidationService userValidationService) {
         this.activityRepository = activityRepository;
+        this.userValidationService = userValidationService;
     }
 
     private ActivityResponse mapToResponse(Activity activity) {
@@ -32,6 +33,10 @@ public class ActivityService {
     }
 
     public ActivityResponse trackActivity(ActivityRequest request) {
+        boolean isValidUser = userValidationService.validateUser(request.getUserId());
+        if(!isValidUser) {
+            throw new RuntimeException("Invalid user id");
+        }
         Activity activity = Activity.builder()
                 .userId(request.getUserId())
                 .duration(request.getDuration())
